@@ -22,3 +22,44 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+
+# ---------- Backend ----------
+
+Backend/target/
+Backend/.mvn/wrapper/maven-wrapper.jar
+
+# IDEs (ignore in all subfolders)
+**/.idea/
+**/*.iml
+**/*.iws
+**/*.ipr
+**/.vscode/
+
+# STS / NetBeans
+**/.apt_generated
+**/.classpath
+**/.factorypath
+**/.project
+**/.settings
+**/.springBeans
+**/.sts4-cache
+**/nbproject/private/
+**/nbbuild/
+**/dist/
+**/nbdist/
+**/.nb-gradle/
+**/build/
+
+# ---------- Frontend ----------
+
+Frontend/node_modules/
+Frontend/dist/
+Frontend/.env
+Frontend/.env.local
+Frontend/.env.*.local
+
+# ---------- OS / Misc ----------
+
+.DS_Store
+Thumbs.db
