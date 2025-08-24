@@ -51,6 +51,9 @@ backend/.mvn/wrapper/maven-wrapper.jar
 **/.nb-gradle/
 **/build/
 
+# .env
+**/.env
+
 # ---------- Frontend ----------
 
 frontend/node_modules/
