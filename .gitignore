@@ -23,8 +23,7 @@
 hs_err_pid*
 replay_pid*
 
-
-# ---------- Backend ----------
+# ---------- Backend (SpringBoot) ----------
 
 backend/target/
 backend/.mvn/wrapper/maven-wrapper.jar
@@ -54,13 +53,28 @@ backend/.mvn/wrapper/maven-wrapper.jar
 # .env
 **/.env
 
-# ---------- Frontend ----------
+# ---------- Frontend (CRA) ----------
 
-frontend/node_modules/
-frontend/dist/
+# dependencies
+frontend/node_modules
+frontend/.pnp
+frontend/.pnp.js
+
+# testing
+frontend/coverage
+
+# production
+frontend/build
+
+# misc
+frontend/.DS_Store
 frontend/.env
 frontend/.env.local
 frontend/.env.*.local
+
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
 
 # ---------- OS / Misc ----------
 
