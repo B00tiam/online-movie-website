@@ -38,7 +38,7 @@ function App() {
 
       <Routes>
         <Route path="/" element={<Layout/>}>
-          <Route path="/" element={<Home/>}></Route>
+          <Route path="/" element={<Home movies={movies}/>}></Route>
         </Route>
       </Routes>
 
