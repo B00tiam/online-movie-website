@@ -6,9 +6,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+
 @SpringBootApplication
 @RestController
-
 public class BackendApplication {
 
 	public static void main(String[] args) {
@@ -17,7 +17,7 @@ public class BackendApplication {
 
     @GetMapping("/")
     public String apiRoot() {
-        return "Hello, Guys!";
+        return "Hello, Guys! API is running!";
     }
 
 }

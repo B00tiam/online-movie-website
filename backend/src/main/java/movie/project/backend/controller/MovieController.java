@@ -1,7 +1,8 @@
-package movie.project.backend;
+package movie.project.backend.controller;
 
 
-import org.bson.types.ObjectId;
+import movie.project.backend.domain.Movie;
+import movie.project.backend.service.MovieService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

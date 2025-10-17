@@ -1,7 +1,8 @@
-package movie.project.backend;
+package movie.project.backend.service;
 
 
-import org.bson.types.ObjectId;
+import movie.project.backend.domain.Movie;
+import movie.project.backend.repository.MovieRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

@@ -1,4 +1,4 @@
-package movie.project.backend;
+package movie.project.backend.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

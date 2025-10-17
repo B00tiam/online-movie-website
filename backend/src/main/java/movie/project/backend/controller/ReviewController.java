@@ -1,6 +1,8 @@
-package movie.project.backend;
+package movie.project.backend.controller;
 
 
+import movie.project.backend.domain.Review;
+import movie.project.backend.service.ReviewService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

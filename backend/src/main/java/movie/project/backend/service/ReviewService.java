@@ -1,6 +1,9 @@
-package movie.project.backend;
+package movie.project.backend.service;
 
 
+import movie.project.backend.domain.Movie;
+import movie.project.backend.domain.Review;
+import movie.project.backend.repository.ReviewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
