@@ -49,8 +49,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/").permitAll()
-                        .requestMatchers("/api/v1/movies/**").permitAll()
-                        .requestMatchers("/api/v1/reviews/**").authenticated()
+                        .requestMatchers("/api/movies/**").permitAll()
+                        .requestMatchers("/api/reviews/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

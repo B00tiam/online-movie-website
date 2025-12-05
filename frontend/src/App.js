@@ -39,7 +39,7 @@ function App() {
       const response = await api.get(`/api/movies/${movieId}`);
       const singleMovie = response.data;
       setMovie(singleMovie);
-      setReviews(singleMovie.reviews || []);    // avoid the situation that reviews is undefined/null
+      setReviews(singleMovie.reviewIds || []);    // avoid the situation that reviews is undefined/null
 
     }
     catch (err) {
