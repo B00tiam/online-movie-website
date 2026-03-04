@@ -47,17 +47,17 @@ public class AuthService {
     }
 
     public AuthResponse register(RegisterRequest registerRequest) {
-        // 检查用户名是否已存在
+        // check if username already exists
         if (userRepository.existsByUsername(registerRequest.getUsername())) {
             throw new RuntimeException("Username already exists!");
         }
 
-        // 检查邮箱是否已存在
+        // check if email already exists
         if (userRepository.existsByEmail(registerRequest.getEmail())) {
             throw new RuntimeException("Email has been registered!");
         }
 
-        // 创建新用户
+        // create a new user
         User user = new User();
         user.setUsername(registerRequest.getUsername());
         user.setEmail(registerRequest.getEmail());
@@ -69,7 +69,7 @@ public class AuthService {
 
         userRepository.save(user);
 
-        // 生成JWT令牌
+        // generate JWT token
         String token = jwtUtil.generateToken(user);
 
         return new AuthResponse(token, user.getUsername(), user.getEmail(), user.getRole());
