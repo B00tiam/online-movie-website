@@ -1,0 +1,92 @@
+[
+  {
+    "imdbId": "tt29232158",
+    "title": "Troll 2",
+    "releaseDate": "2025-11-30",
+    "trailerLink": "https://www.youtube.com/watch?v=Hzk4ovnGOyw",
+    "genres": [
+      "Action",
+      "Fantasy",
+      "Thriller"
+    ],
+    "poster": "https://image.tmdb.org/t/p/w500/p6xAExLNFbHcLfvSuvLPoM8aqZU.jpg",
+    "backdrops": [
+      "https://image.tmdb.org/t/p/original/y0o5MAGciafy71JzyZWUg5CQShF.jpg",
+      "https://image.tmdb.org/t/p/original/shB7IhQhiPm7DJXyChcL3MbJxzi.jpg"
+    ],
+    "reviewIds": []
+  },
+  {
+    "imdbId": "tt3915174",
+    "title": "Puss in Boots: The Last Wish",
+    "releaseDate": "2022-12-07",
+    "trailerLink": "https://www.youtube.com/watch?v=tHb7WlgyaUc",
+    "genres": [
+      "Animation",
+      "Adventure",
+      "Fantasy",
+      "Comedy",
+      "Family"
+    ],
+    "poster": "https://image.tmdb.org/t/p/w500/kuf6dutpsT0vSVehic3EZIqkOBt.jpg",
+    "backdrops": [
+      "https://image.tmdb.org/t/p/original/qUroDlCDUMwRWbkyjZGB9THkMgZ.jpg",
+      "https://image.tmdb.org/t/p/original/pTsgM3uXgECn5bGQbrRqkpIXkGE.jpg",
+      "https://image.tmdb.org/t/p/original/fNPq2EVHzK4qhhmv4CauZogc6oM.jpg",
+      "https://image.tmdb.org/t/p/original/vMMEOGya08IeDQcGvjok4phuOTH.jpg",
+      "https://image.tmdb.org/t/p/original/Ap0Yvwh4aJbcv0F4PewZGheh3Xg.jpg",
+      "https://image.tmdb.org/t/p/original/iyxvxEQIfQjzJJTfszZxmH5UV35.jpg",
+      "https://image.tmdb.org/t/p/original/8SRY6IcMKO1E5p83w7bjvcqklp9.jpg",
+      "https://image.tmdb.org/t/p/original/erkJ7OxJWFdLBOcn2MvIdhTLHTu.jpg",
+      "https://image.tmdb.org/t/p/original/lexPKf5OIcrVhFJkYKoOsnOZTWl.jpg",
+      "https://image.tmdb.org/t/p/original/1OyVNIA6GId7MjOw01iZ9klcEnv.jpg"
+    ],
+    "reviewIds": []
+  },
+  {
+    "imdbId": "tt6710474",
+    "title": "Everything Everywhere All at Once",
+    "releaseDate": "2022-03-24",
+    "trailerLink": "https://www.youtube.com/watch?v=wxN1T1uxQ2g",
+    "genres": [
+      "Action",
+      "Adventure",
+      "Science Fiction"
+    ],
+    "poster": "https://image.tmdb.org/t/p/w500/u68AjlvlutfEIcpmbYpKcdi09ut.jpg",
+    "backdrops": [
+      "https://image.tmdb.org/t/p/original/vKLxqfFw8gHdQgc4fkyUu9k9fuf.jpg",
+      "https://image.tmdb.org/t/p/original/wIR3QRwBhSuss0Nps03XKIHN5dD.jpg",
+      "https://image.tmdb.org/t/p/original/c96Ut9dzCm2PTGTxtA9JlvCbhj3.jpg",
+      "https://image.tmdb.org/t/p/original/5fn5DUVowB5paaWyA0p9s9W8JAZ.jpg",
+      "https://image.tmdb.org/t/p/original/vtwchLhgoj1Diq20sb5OE3YReQB.jpg",
+      "https://image.tmdb.org/t/p/original/rXDsE0M4hy3jX0CZXWMLOkhxjKs.jpg",
+      "https://image.tmdb.org/t/p/original/sMaJR8sEhKgCTQYUK9MopltSlFx.jpg"
+    ],
+    "reviewIds": []
+  },
+  {
+    "imdbId": "tt4589218",
+    "title": "Five Nights at Freddy's",
+    "releaseDate": "2023-10-25",
+    "trailerLink": "https://www.youtube.com/watch?v=X4d_v-HyR4o",
+    "genres": [
+      "Horror",
+      "Thriller",
+      "Family"
+    ],
+    "poster": "https://image.tmdb.org/t/p/w500/4dKRTUylqwXQ4VJz0BS84fqW2wa.jpg",
+    "backdrops": [
+      "https://image.tmdb.org/t/p/original/dP6aTajnmITTfipJdb1I66WCMlS.jpg",
+      "https://image.tmdb.org/t/p/original/ixvFnmUpNetPiryctBOJe5wKOCq.jpg",
+      "https://image.tmdb.org/t/p/original/kfcyxDK16wxBjRdGz27Y2a8PxZ9.jpg",
+      "https://image.tmdb.org/t/p/original/xxwr7mVBpmCqaTjKw2JoaG8qi5P.jpg",
+      "https://image.tmdb.org/t/p/original/sF1AfzwzHRmzenDm0C5tUSox3v8.jpg",
+      "https://image.tmdb.org/t/p/original/klGPrBcaXgvYhvOtT0GMGNRDcmD.jpg",
+      "https://image.tmdb.org/t/p/original/qk3eaRTHrSYCzWQVHssAKGFWZM1.jpg",
+      "https://image.tmdb.org/t/p/original/p1mTd5u9dzAlgrGaAw3eEJOnrWC.jpg",
+      "https://image.tmdb.org/t/p/original/4Bjf7P1Eg1zuCrON2tU8YIBJLOO.jpg"
+    ],
+    "reviewIds": []
+  }
+]
