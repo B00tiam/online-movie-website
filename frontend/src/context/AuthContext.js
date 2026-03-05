@@ -63,6 +63,25 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // delete own account
+  const deleteAccount = async () => {
+    try {
+      await api.delete('/api/auth/account');
+
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setUser(null);
+      setIsAuthenticated(false);
+
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'delete account failed!'
+      };
+    }
+  };
+
   // logout
   const logout = () => {
     localStorage.removeItem('token');
@@ -72,7 +91,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{user, isAuthenticated, loading, login, register, logout}}>
+    <AuthContext.Provider value={{user, isAuthenticated, loading, login, register, deleteAccount, logout}}>
       {children}
     </AuthContext.Provider>
   );

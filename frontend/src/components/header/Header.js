@@ -4,17 +4,30 @@ import Button from "react-bootstrap/Button";
 import Container from "react-bootstrap/Container";
 import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
+import NavDropdown from "react-bootstrap/NavDropdown";
 import {NavLink, useNavigate} from "react-router-dom";
 import {useAuth} from "../../context/AuthContext";
 
 
 const Header = () => {
-  const {user, isAuthenticated, logout} = useAuth();
+  const {user, isAuthenticated, logout, deleteAccount} = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  const handleDeleteAccount = async () => {
+    const ok = window.confirm("Permanently delete your account? This action cannot be undone.");
+    if (!ok) return;
+
+    const res = await deleteAccount?.();
+    if (res?.success !== false) {
+      navigate('/');
+      return;
+    }
+    alert(res?.message || "delete account failed!");
   };
 
   return (
@@ -32,17 +45,37 @@ const Header = () => {
             <NavLink className="nav-link" to="/">Home</NavLink>
             <NavLink className="nav-link" to="/watchList">Watchlist</NavLink>
           </Nav>
-          {isAuthenticated ? (
-            <>
-              <span className="text-light me-3">Welcome, {user?.username}</span>
-              <Button variant="outline-danger" onClick={handleLogout}>Logout</Button>
-            </>
-          ) : (
-            <>
-              <Button variant="outline-info" className="me-2" onClick={() => navigate('/login')}>Login</Button>
-              <Button variant="outline-info" onClick={() => navigate('/register')}>Register</Button>
-            </>
-          )}
+
+          <Nav className="ms-auto">
+            <NavDropdown
+              align="end"
+              title={isAuthenticated ? `Welcome, ${user?.username || ""}` : "Account"}
+              id="account-dropdown"
+              menuVariant="dark"
+            >
+              {isAuthenticated ? (
+                <>
+                  <NavDropdown.Item onClick={handleLogout}>
+                    Logout
+                  </NavDropdown.Item>
+                  <NavDropdown.Divider />
+                  <NavDropdown.Item className="text-danger" onClick={handleDeleteAccount}>
+                    Delete Account
+                  </NavDropdown.Item>
+                </>
+              ) : (
+                <>
+                  <NavDropdown.Item onClick={() => navigate('/login')}>
+                    Login
+                  </NavDropdown.Item>
+                  <NavDropdown.Item onClick={() => navigate('/register')}>
+                    Register
+                  </NavDropdown.Item>
+                </>
+              )}
+            </NavDropdown>
+          </Nav>
+
         </Navbar.Collapse>
       </Container>
     </Navbar>

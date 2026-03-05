@@ -81,7 +81,7 @@ const Register = () => {
               />
             </Form.Group>
             <Button variant="info" type="submit" className="w-100" disabled={loading}>
-              {loading ? 'Registering...' : 'Registered'}
+              {loading ? 'Registering...' : 'Register'}
             </Button>
           </Form>
           <div className="text-center mt-3">
