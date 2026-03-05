@@ -18,6 +18,7 @@ public class AuthController {
     @Autowired
     private AuthService authService;
 
+    // - user login
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
         try {
@@ -29,6 +30,7 @@ public class AuthController {
         }
     }
 
+    // - user register
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest registerRequest) {
         try {
@@ -37,6 +39,18 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                     .body(new ErrorResponse("Register failed: " + e.getMessage()));
+        }
+    }
+
+    // - delete own account
+    @DeleteMapping("/account")
+    public ResponseEntity<?> deleteMyAccount() {
+        try {
+            authService.deleteCurrentUser();
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new ErrorResponse("Delete account failed: " + e.getMessage()));
         }
     }
 

@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -73,5 +74,24 @@ public class AuthService {
         String token = jwtUtil.generateToken(user);
 
         return new AuthResponse(token, user.getUsername(), user.getEmail(), user.getRole());
+    }
+
+    // delete current user
+    public void deleteCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null || auth.getName().isBlank()) {
+            throw new IllegalStateException("Unauthenticated.");
+        }
+
+        String username = auth.getName();
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
+
+        if ("ADMIN".equals(user.getRole()) && userRepository.countByRole("ADMIN") <= 1) {
+            throw new IllegalStateException("Cannot delete the last ADMIN.");
+        }
+
+        userRepository.delete(user);
     }
 }

@@ -21,17 +21,20 @@ public class AdminUserController {
         this.adminUserService = adminUserService;
     }
 
+    // - list users
     @GetMapping
     public List<AdminUserView> listUsers() {
         return adminUserService.listUsers();
     }
 
+    // - enable/disable user
     @PatchMapping("/{id}/enabled")
     public AdminUserView setEnabled(@PathVariable String id,
                                     @Valid @RequestBody SetUserEnabledRequest req) {
         return adminUserService.setEnabled(id, req);
     }
 
+    // - set user role
     @PatchMapping("/{id}/role")
     public AdminUserView setRole(@PathVariable String id,
                                  @Valid @RequestBody SetUserRoleRequest req) {
