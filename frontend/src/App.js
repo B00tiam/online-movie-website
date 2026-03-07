@@ -12,6 +12,7 @@ import Reviews from "./components/reviews/Reviews";
 import NotFound from "./components/notFound/NotFound";
 import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
+import AiChatWidget from "./components/aiChat/AiChatWidget";
 
 function App() {
 
@@ -66,6 +67,9 @@ function App() {
             <Route path="*" element={<NotFound/>}></Route>
           </Route>
         </Routes>
+
+        <AiChatWidget/>
+
       </div>
     </AuthProvider>
   );
