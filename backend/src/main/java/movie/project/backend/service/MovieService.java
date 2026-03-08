@@ -23,4 +23,10 @@ public class MovieService {
     public Optional<Movie> singleMovie(String imdbId) {
         return movieRepository.findMovieByImdbId(imdbId);
     }
+
+    // sort movies by release date & genre
+    public List<Movie> moviesByGenreLatestFirst(String genre) {
+        return movieRepository.findByGenresContainingOrderByReleaseDateDesc(genre);
+    }
+
 }

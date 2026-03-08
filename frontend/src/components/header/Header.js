@@ -6,6 +6,8 @@ import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
 import NavDropdown from "react-bootstrap/NavDropdown";
 import {NavLink, useNavigate} from "react-router-dom";
+import {Link} from "react-router-dom";
+
 import {useAuth} from "../../context/AuthContext";
 
 
@@ -30,6 +32,8 @@ const Header = () => {
     alert(res?.message || "delete account failed!");
   };
 
+  const genres = ["Action", "Adventure", "Comedy", "Fantasy", "Science Fiction", "Horror", "Animation", "Family", "Drama"];
+
   return (
     <Navbar bg="dark" variant="dark" expand="lg">
       <Container fluid>
@@ -44,6 +48,18 @@ const Header = () => {
           >
             <NavLink className="nav-link" to="/">Home</NavLink>
             <NavLink className="nav-link" to="/watchList">Watchlist</NavLink>
+
+            <NavDropdown title="Genres" id="genres-dropdown" menuVariant="dark">
+              {genres.map((g) => (
+                <NavDropdown.Item
+                  key={g}
+                  as={Link}
+                  to={`/genre/${encodeURIComponent(g)}`}
+                >
+                  {g}
+                </NavDropdown.Item>
+              ))}
+            </NavDropdown>
           </Nav>
 
           <Nav className="ms-auto">

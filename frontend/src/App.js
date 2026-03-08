@@ -13,6 +13,8 @@ import NotFound from "./components/notFound/NotFound";
 import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
 import AiChatWidget from "./components/aiChat/AiChatWidget";
+import GenreMovies from "./components/sort/GenreMovies";
+
 
 function App() {
 
@@ -65,6 +67,7 @@ function App() {
             <Route path="/login" element={<Login/>}></Route>
             <Route path="/register" element={<Register/>}></Route>
             <Route path="*" element={<NotFound/>}></Route>
+            <Route path="/genre/:genre" element={<GenreMovies/>}></Route>
           </Route>
         </Routes>
 

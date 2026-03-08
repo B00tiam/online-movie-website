@@ -31,4 +31,11 @@ public class MovieController {
     public ResponseEntity<Optional<Movie>> getSingleMovies(@PathVariable String imdbId) {
         return new ResponseEntity<Optional<Movie>>(movieService.singleMovie(imdbId), HttpStatus.OK);
     }
+
+    // sort movies by release date & genre
+    @GetMapping("/genre/{genre}")
+    public ResponseEntity<List<Movie>> getMoviesByGenre(@PathVariable String genre) {
+        return ResponseEntity.ok(movieService.moviesByGenreLatestFirst(genre));
+    }
+
 }
