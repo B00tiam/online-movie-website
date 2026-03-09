@@ -15,6 +15,7 @@ import Register from "./components/auth/Register";
 import AiChatWidget from "./components/aiChat/AiChatWidget";
 import GenreMovies from "./components/sort/GenreMovies";
 import Watchlist from "./components/watchlist/Watchlist";
+import SearchResults from "./components/search/SearchResults";
 
 
 function App() {
@@ -70,6 +71,7 @@ function App() {
             <Route path="/register" element={<Register/>}></Route>
             <Route path="*" element={<NotFound/>}></Route>
             <Route path="/genre/:genre" element={<GenreMovies/>}></Route>
+            <Route path="/search" element={<SearchResults />}></Route>
           </Route>
         </Routes>
 

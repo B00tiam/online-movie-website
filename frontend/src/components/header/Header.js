@@ -7,13 +7,16 @@ import Navbar from "react-bootstrap/Navbar";
 import NavDropdown from "react-bootstrap/NavDropdown";
 import {NavLink, useNavigate} from "react-router-dom";
 import {Link} from "react-router-dom";
+import React, {useState} from "react";
+import {Form} from "react-bootstrap";
 
 import {useAuth} from "../../context/AuthContext";
 
 
 const Header = () => {
-  const {user, isAuthenticated, logout, deleteAccount} = useAuth();
+  const [q, setQ] = useState("");
   const navigate = useNavigate();
+  const {user, isAuthenticated, logout, deleteAccount} = useAuth();
 
   const handleLogout = () => {
     logout();
@@ -33,6 +36,12 @@ const Header = () => {
   };
 
   const genres = ["Action", "Adventure", "Comedy", "Fantasy", "Science Fiction", "Horror", "Animation", "Family", "Drama"];
+
+  const submit = (e) => {
+    e.preventDefault();
+    const keyword = q.trim();
+    navigate(keyword ? `/search?q=${encodeURIComponent(keyword)}` : "/search");
+  };
 
   return (
     <Navbar bg="dark" variant="dark" expand="lg">
@@ -61,6 +70,17 @@ const Header = () => {
               ))}
             </NavDropdown>
           </Nav>
+
+          <Form onSubmit={submit} className="d-flex ms-auto gap-2">
+            <Form.Control
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Searching..."
+            />
+            <Button type="submit" variant="outline-light">
+              Search
+            </Button>
+          </Form>
 
           <Nav className="ms-auto">
             <NavDropdown
