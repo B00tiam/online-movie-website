@@ -1,0 +1,13 @@
+.library-buttons-container {
+  display: flex;
+  justify-content: center;
+  column-gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.library-button {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}

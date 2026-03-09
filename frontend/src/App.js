@@ -14,6 +14,7 @@ import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
 import AiChatWidget from "./components/aiChat/AiChatWidget";
 import GenreMovies from "./components/sort/GenreMovies";
+import Watchlist from "./components/watchlist/Watchlist";
 
 
 function App() {
@@ -64,6 +65,7 @@ function App() {
             <Route path="/" element={<Home movies={movies}/>}></Route>
             <Route path="/Trailer/:ytTrailerId" element={<Trailer/>}></Route>
             <Route path="/Reviews/:movieId" element={<Reviews getMovieData={getMovieData} movie={movie} reviews={reviews} setReviews={setReviews}/>}></Route>
+            <Route path="/watchList" element={<Watchlist/>}></Route>
             <Route path="/login" element={<Login/>}></Route>
             <Route path="/register" element={<Register/>}></Route>
             <Route path="*" element={<NotFound/>}></Route>

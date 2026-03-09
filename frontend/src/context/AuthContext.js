@@ -8,7 +8,10 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // init: check user info from the database
+  // watchlist imdbId list
+  const [watchlistIds, setWatchlistIds] = useState([]);
+
+  // init
   useEffect(() => {
     const token = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
@@ -18,6 +21,55 @@ export const AuthProvider = ({ children }) => {
     }
     setLoading(false);
   }, []);
+
+  // load watchlist after login/logout
+  useEffect(() => {
+    const loadWatchlist = async () => {
+      if (!isAuthenticated) {
+        setWatchlistIds([]);
+        return;
+      }
+      try {
+        const res = await api.get('/api/watchlist');
+        const ids = (res.data || []).map(m => m.imdbId).filter(Boolean);
+        setWatchlistIds(ids);
+      } catch (e) {
+        setWatchlistIds([]);
+      }
+    };
+
+    loadWatchlist();
+  }, [isAuthenticated]);
+
+  const refreshWatchlist = async () => {
+    if (!isAuthenticated) return [];
+    const res = await api.get('/api/watchlist');
+    const ids = (res.data || []).map(m => m.imdbId).filter(Boolean);
+    setWatchlistIds(ids);
+    return ids;
+  };
+
+  const toggleWatchlist = async (imdbId) => {
+    if (!isAuthenticated) {
+      return { success: false, requiresLogin: true };
+    }
+
+    const inList = watchlistIds.includes(imdbId);
+
+    try {
+      if (inList) {
+        await api.delete(`/api/watchlist/${imdbId}`);
+        setWatchlistIds(prev => prev.filter(id => id !== imdbId));
+        return { success: true, inWatchlist: false };
+      } else {
+        await api.post(`/api/watchlist/${imdbId}`);
+        setWatchlistIds(prev => (prev.includes(imdbId) ? prev : [...prev, imdbId]));
+        return { success: true, inWatchlist: true };
+      }
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || 'watchlist update failed' };
+    }
+  };
 
   // login
   const login = async (usernameOrEmail, password) => {
@@ -72,6 +124,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('user');
       setUser(null);
       setIsAuthenticated(false);
+      setWatchlistIds([]);
 
       return { success: true };
     } catch (error) {
@@ -88,10 +141,22 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user');
     setUser(null);
     setIsAuthenticated(false);
+    setWatchlistIds([]);
   };
 
   return (
-    <AuthContext.Provider value={{user, isAuthenticated, loading, login, register, deleteAccount, logout}}>
+    <AuthContext.Provider value={{
+      user,
+      isAuthenticated,
+      loading,
+      login,
+      register,
+      deleteAccount,
+      logout,
+      watchlistIds,
+      refreshWatchlist,
+      toggleWatchlist
+    }}>
       {children}
     </AuthContext.Provider>
   );
