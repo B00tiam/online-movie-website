@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 import java.util.Optional;
@@ -36,6 +37,12 @@ public class MovieController {
     @GetMapping("/genre/{genre}")
     public ResponseEntity<List<Movie>> getMoviesByGenre(@PathVariable String genre) {
         return ResponseEntity.ok(movieService.moviesByGenreLatestFirst(genre));
+    }
+
+    // search movies by title
+    @GetMapping("/search")
+    public ResponseEntity<List<Movie>> searchMovies(@RequestParam(name = "q", required = false) String q) {
+        return ResponseEntity.ok(movieService.searchMovies(q));
     }
 
 }

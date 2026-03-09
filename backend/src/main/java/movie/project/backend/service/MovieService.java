@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Collections;
 
 
 @Service
@@ -29,4 +30,21 @@ public class MovieService {
         return movieRepository.findByGenresContainingOrderByReleaseDateDesc(genre);
     }
 
+    // get movies by title, and sort by release date
+    public List<Movie> moviesByTitleLatestFirst(String title) {
+        return movieRepository.findByTitleContainingIgnoreCaseOrderByReleaseDateDesc(title);
+    }
+
+    public List<Movie> searchMovies(String q) {
+        // if query is null or empty, return all movies
+        if (q == null) {
+            return movieRepository.findAll();
+        }
+        String keyword = q.trim();
+        if (keyword.isEmpty()) {
+            return movieRepository.findAll();
+        }
+        // search by title
+        return movieRepository.findByTitleContainingIgnoreCaseOrderByReleaseDateDesc(keyword);
+    }
 }
