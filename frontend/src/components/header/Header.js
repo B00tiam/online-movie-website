@@ -73,7 +73,10 @@ const Header = () => {
             </NavDropdown>
 
             {isAdmin && (
-              <NavLink className="nav-link" to="/admin/users">Users</NavLink>
+              <>
+                <NavLink className="nav-link" to="/admin/users">Users</NavLink>
+                <NavLink className="nav-link" to="/admin/reviews">Reviews</NavLink>
+              </>
             )}
           </Nav>
 
