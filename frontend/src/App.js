@@ -16,6 +16,8 @@ import AiChatWidget from "./components/aiChat/AiChatWidget";
 import GenreMovies from "./components/sort/GenreMovies";
 import Watchlist from "./components/watchlist/Watchlist";
 import SearchResults from "./components/search/SearchResults";
+import RequireAdmin from "./components/admin/RequireAdmin";
+import AdminUsers from "./components/admin/AdminUsers";
 
 
 function App() {
@@ -69,6 +71,9 @@ function App() {
             <Route path="/watchList" element={<Watchlist/>}></Route>
             <Route path="/login" element={<Login/>}></Route>
             <Route path="/register" element={<Register/>}></Route>
+            <Route element={<RequireAdmin/>}>
+              <Route path="/admin/users" element={<AdminUsers/>} />
+            </Route>
             <Route path="*" element={<NotFound/>}></Route>
             <Route path="/genre/:genre" element={<GenreMovies/>}></Route>
             <Route path="/search" element={<SearchResults />}></Route>

@@ -75,12 +75,12 @@ export const AuthProvider = ({ children }) => {
   const login = async (usernameOrEmail, password) => {
     try {
       const response = await api.post('/api/auth/login', { usernameOrEmail, password });
-      const {token, username: name, userId} = response.data;
+      const {token, username: name, userId, role} = response.data;
 
       localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify({ username: name, userId }));
+      localStorage.setItem('user', JSON.stringify({ username: name, userId, role }));
 
-      setUser({ username: name, userId });
+      setUser({ username: name, userId, role });
       setIsAuthenticated(true);
 
       return { success: true };
@@ -97,12 +97,12 @@ export const AuthProvider = ({ children }) => {
   const register = async (username, email, password) => {
     try {
       const response = await api.post('/api/auth/register', { username, email, password });
-      const { token, username: name, userId } = response.data;
+      const { token, username: name, userId, role } = response.data;
 
       localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify({ username: name, userId }));
+      localStorage.setItem('user', JSON.stringify({ username: name, userId, role }));
 
-      setUser({ username: name, userId });
+      setUser({ username: name, userId, role });
       setIsAuthenticated(true);
 
       return { success: true };

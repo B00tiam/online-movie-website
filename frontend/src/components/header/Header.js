@@ -43,6 +43,8 @@ const Header = () => {
     navigate(keyword ? `/search?q=${encodeURIComponent(keyword)}` : "/search");
   };
 
+  const isAdmin = isAuthenticated && user?.role === "ADMIN";
+
   return (
     <Navbar bg="dark" variant="dark" expand="lg">
       <Container fluid>
@@ -69,6 +71,10 @@ const Header = () => {
                 </NavDropdown.Item>
               ))}
             </NavDropdown>
+
+            {isAdmin && (
+              <NavLink className="nav-link" to="/admin/users">Users</NavLink>
+            )}
           </Nav>
 
           <Form onSubmit={submit} className="d-flex ms-auto gap-2">
