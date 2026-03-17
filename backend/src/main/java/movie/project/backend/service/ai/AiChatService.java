@@ -1,5 +1,6 @@
 package movie.project.backend.service.ai;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import movie.project.backend.domain.Movie;
@@ -13,7 +14,10 @@ import org.springframework.web.client.RestClient;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class AiChatService {
@@ -43,25 +47,54 @@ public class AiChatService {
     }
 
     public String chat(String userMessage) {
+        String url = buildGeminiUrl();
+
+        // Step 1: ask model to either call a tool or return final answer
+        String step1Prompt = buildStep1Prompt(userMessage);
+        String step1Raw = callModel(url, step1Prompt);
+
+        AgentModelOutput out = parseAgentOutput(step1Raw);
+        if (out == null) {
+            // Fallback: keep existing behavior (no agent)
+            return safeTextReply(step1Raw);
+        }
+
+        if ("final".equalsIgnoreCase(out.type)) {
+            return out.reply == null || out.reply.isBlank() ? safeTextReply(step1Raw) : out.reply;
+        }
+
+        if (!"tool_call".equalsIgnoreCase(out.type) || out.tool == null) {
+            return safeTextReply(step1Raw);
+        }
+
+        if (!"search_movies".equalsIgnoreCase(out.tool)) {
+            // Allowlist: only one tool for phase 1
+            return safeTextReply(step1Raw);
+        }
+
+        ToolCallArgs args = out.args == null ? new ToolCallArgs(null, null, null) : out.args;
+        ToolResult toolResult = runSearchTool(args);
+
+        // Step 2: provide tool result and ask for final response
+        String step2Prompt = buildStep2Prompt(userMessage, out, toolResult);
+        String step2Raw = callModel(url, step2Prompt);
+
+        AgentModelOutput out2 = parseAgentOutput(step2Raw);
+        if (out2 != null && "final".equalsIgnoreCase(out2.type) && out2.reply != null && !out2.reply.isBlank()) {
+            return out2.reply;
+        }
+
+        return safeTextReply(step2Raw);
+    }
+
+    private String buildGeminiUrl() {
         String normalizedBase = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
-        String url = normalizedBase
+        return normalizedBase
                 + "/models/" + URLEncoder.encode(model, StandardCharsets.UTF_8)
                 + ":generateContent?key=" + URLEncoder.encode(apiKey, StandardCharsets.UTF_8);
+    }
 
-        List<LocalMovieSnippet> localMovies = searchLocalMoviesForContext(userMessage, 10);
-
-        String instruction =
-                "You are the AI assistant for this movie website. " +
-                "Please respond in a concise and friendly tone, and provide actionable suggestions whenever possible. " +
-                "When answering questions about what exists in the local movie library, rely only on LOCAL_MOVIES. " +
-                "If LOCAL_MOVIES is empty or insufficient, say you cannot find enough information in the local library and ask for more details.";
-
-        String localContext = toJsonSafe(localMovies);
-
-        String prompt = instruction
-                + "\n\nLOCAL_MOVIES:\n" + localContext
-                + "\n\nUser Question:\n" + userMessage;
-
+    private String callModel(String url, String prompt) {
         Map<String, Object> payload = Map.of(
                 "contents", List.of(
                         Map.of(
@@ -70,50 +103,81 @@ public class AiChatService {
                         )
                 ),
                 "generationConfig", Map.of(
-                        "temperature", 0.7
+                        "temperature", 0.3
                 )
         );
 
-        String raw = restClient.post()
+        return restClient.post()
                 .uri(url)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .body(payload)
                 .retrieve()
                 .body(String.class);
-
-        try {
-            JsonNode root = objectMapper.readTree(raw);
-            JsonNode textNode = root.path("candidates")
-                    .path(0)
-                    .path("content")
-                    .path("parts")
-                    .path(0)
-                    .path("text");
-
-            String reply = textNode.isMissingNode() ? null : textNode.asText();
-            return (reply == null || reply.isBlank())
-                    ? "I haven't received the model response yet. Please try again later."
-                    : reply;
-        } catch (Exception e) {
-            return "Model parsing failed. Please try again later.";
-        }
     }
 
-    private List<LocalMovieSnippet> searchLocalMoviesForContext(String userMessage, int limit) {
-        String keyword = extractSearchKeyword(userMessage);
-        if (keyword == null || keyword.isBlank()) {
-            return List.of();
+    private String buildStep1Prompt(String userMessage) {
+        // No Chinese in code: keep instructions in English
+        return """
+                You are an AI agent for a movie website. Your job is to decide whether to call a tool to search the local movie database.
+
+                Output MUST be a single JSON object only (no markdown, no extra text).
+
+                Allowed tools:
+                1) search_movies(args):
+                   - mode: "title" or "genre"
+                   - query: string (required)
+                   - limit: integer (optional, max 20)
+
+                If the user asks to recommend or find movies by a genre (e.g. science fiction, action, comedy), call search_movies with mode="genre".
+                Otherwise, if the user asks for a specific movie name, call search_movies with mode="title".
+
+                JSON schemas:
+                - Tool call:
+                  {"type":"tool_call","tool":"search_movies","args":{"mode":"title|genre","query":"...","limit":10}}
+                - Final answer:
+                  {"type":"final","reply":"..."}
+
+                User message:
+                """.strip() + "\n" + (userMessage == null ? "" : userMessage.trim());
+    }
+
+    private String buildStep2Prompt(String userMessage, AgentModelOutput step1, ToolResult toolResult) {
+        String toolJson = toJsonSafe(toolResult);
+        return """
+                You are an AI agent for a movie website.
+
+                You previously decided to call a tool. Now you must produce the final answer.
+                Output MUST be a single JSON object only (no markdown, no extra text).
+
+                JSON schema:
+                {"type":"final","reply":"..."}
+
+                User message:
+                """.strip() + "\n" + (userMessage == null ? "" : userMessage.trim())
+                + "\n\nTool call:\n" + toJsonSafe(step1)
+                + "\n\nTOOL_RESULT:\n" + toolJson;
+    }
+
+    private ToolResult runSearchTool(ToolCallArgs args) {
+        String mode = args.mode == null ? "title" : args.mode.trim().toLowerCase(Locale.ROOT);
+        int limit = args.limit == null ? 10 : Math.min(Math.max(args.limit, 1), 20);
+
+        String q = args.query == null ? "" : args.query.trim();
+        if (q.isEmpty()) {
+            return new ToolResult("search_movies", mode, q, limit, List.of(), "empty_query");
         }
 
-        List<Movie> found = movieService.searchMovies(keyword);
-        if (found == null || found.isEmpty()) {
-            return List.of();
+        List<Movie> found;
+        if ("genre".equals(mode)) {
+            String normalizedGenre = normalizeGenreQuery(q);
+            found = movieService.moviesByGenreLatestFirst(normalizedGenre);
+        } else {
+            found = movieService.searchMovies(q);
         }
 
-        int capped = Math.min(Math.max(limit, 1), 20);
-        return found.stream()
-                .limit(capped)
+        List<LocalMovieSnippet> items = (found == null ? List.<Movie>of() : found).stream()
+                .limit(limit)
                 .map(m -> new LocalMovieSnippet(
                         m.getImdbId(),
                         m.getTitle(),
@@ -122,30 +186,130 @@ public class AiChatService {
                         m.getPoster()
                 ))
                 .toList();
+
+        return new ToolResult("search_movies", mode, q, limit, items, null);
     }
 
-    private String extractSearchKeyword(String userMessage) {
-        if (userMessage == null) return null;
-        String s = userMessage.trim();
-        if (s.isEmpty()) return null;
+    private String normalizeGenreQuery(String q) {
+        // Map common inputs to your existing UI genre names (Header.js).
+        // Keep strings in English only.
+        String s = q.toLowerCase(Locale.ROOT).trim();
 
-        // Keep it cheap and safe:
-        // - Avoid triggering "return all movies" behavior in MovieService.searchMovies(null/empty)
-        // - Cap length to prevent huge DB queries and prompt injection via extremely long input
-        if (s.length() > 80) {
-            s = s.substring(0, 80).trim();
+        // science fiction, sci-fi, sci fi, sci-fi
+        if (s.contains("science") && s.contains("fiction")) return "Science Fiction";
+        if (s.contains("sci") && s.contains("fi")) return "Science Fiction";
+
+        if (s.contains("action")) return "Action";
+        if (s.contains("adventure")) return "Adventure";
+        if (s.contains("comedy")) return "Comedy";
+        if (s.contains("fantasy")) return "Fantasy";
+        if (s.contains("horror")) return "Horror";
+        if (s.contains("animation")) return "Animation";
+        if (s.contains("family")) return "Family";
+        if (s.contains("drama")) return "Drama";
+
+        // Fallback: pass through, since repository uses "containing"
+        // but note: "Science Fiction" vs "Sci-Fi" must match your stored genres.
+        return q.trim();
+    }
+
+    private AgentModelOutput parseAgentOutput(String rawModelResponse) {
+        String text = extractTextFromGeminiResponse(rawModelResponse);
+        if (text == null || text.isBlank()) return null;
+
+        String json = extractFirstJsonObject(text);
+        if (json == null) return null;
+
+        try {
+            return objectMapper.readValue(json, AgentModelOutput.class);
+        } catch (Exception e) {
+            return null;
         }
+    }
 
-        // If the message contains any non-whitespace, use it as the keyword.
-        // This works for both ASCII and non-ASCII titles without hardcoding any language keywords.
-        return s.isEmpty() ? null : s;
+    private String safeTextReply(String rawModelResponse) {
+        String text = extractTextFromGeminiResponse(rawModelResponse);
+        if (text == null || text.isBlank()) {
+            return "I haven't received the model response yet. Please try again later.";
+        }
+        return text;
+    }
+
+    private String extractTextFromGeminiResponse(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        try {
+            JsonNode root = objectMapper.readTree(raw);
+            JsonNode textNode = root.path("candidates")
+                    .path(0)
+                    .path("content")
+                    .path("parts")
+                    .path(0)
+                    .path("text");
+            return textNode.isMissingNode() ? null : textNode.asText();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private String extractFirstJsonObject(String text) {
+        // Minimal JSON object extraction: find the first {...} block.
+        // Works for typical "single JSON object" responses; keeps implementation simple.
+        Pattern p = Pattern.compile("\\{[\\s\\S]*\\}");
+        Matcher m = p.matcher(text);
+        return m.find() ? m.group() : null;
     }
 
     private String toJsonSafe(Object value) {
         try {
             return objectMapper.writeValueAsString(value);
         } catch (Exception e) {
-            return "[]";
+            return "{}";
+        }
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class AgentModelOutput {
+        public String type;          // "tool_call" | "final"
+        public String tool;          // e.g. "search_movies"
+        public ToolCallArgs args;    // tool args
+        public String reply;         // final reply
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class ToolCallArgs {
+        public String mode;   // "title" | "genre"
+        public String query;
+        public Integer limit;
+
+        public ToolCallArgs() {
+        }
+
+        public ToolCallArgs(String mode, String query, Integer limit) {
+            this.mode = mode;
+            this.query = query;
+            this.limit = limit;
+        }
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class ToolResult {
+        public String tool;
+        public String mode;
+        public String query;
+        public int limit;
+        public List<LocalMovieSnippet> items;
+        public String error;
+
+        public ToolResult() {
+        }
+
+        public ToolResult(String tool, String mode, String query, int limit, List<LocalMovieSnippet> items, String error) {
+            this.tool = tool;
+            this.mode = mode;
+            this.query = query;
+            this.limit = limit;
+            this.items = items;
+            this.error = error;
         }
     }
 }
