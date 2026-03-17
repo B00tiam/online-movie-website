@@ -19,6 +19,8 @@ import SearchResults from "./components/search/SearchResults";
 import RequireAdmin from "./components/admin/RequireAdmin";
 import AdminUsers from "./components/admin/AdminUsers";
 import AdminReviews from "./components/admin/AdminReviews";
+import AdminMovies from "./components/admin/AdminMovies";
+
 
 
 function App() {
@@ -76,6 +78,7 @@ function App() {
             <Route element={<RequireAdmin />}>
               <Route path="/admin/users" element={<AdminUsers />} />
               <Route path="/admin/reviews" element={<AdminReviews />} />
+              <Route path="/admin/movies" element={<AdminMovies />} />
             </Route>
 
             <Route path="*" element={<NotFound/>}></Route>
