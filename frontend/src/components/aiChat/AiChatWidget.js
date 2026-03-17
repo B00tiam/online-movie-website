@@ -2,12 +2,20 @@ import React, {useMemo, useState} from "react";
 import api from "../../api/AxiosConfig";
 
 export default function AiChatWidget() {
+  const initialMessages = useMemo(
+    () => [
+      {
+        role: "assistant",
+        content: "Hello, I'm the movie site AI assistant. What kind of movies are you looking for?",
+      },
+    ],
+    []
+  );
+
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [messages, setMessages] = useState([
-    {role: "assistant", content: "Hello, I'm the movie site AI assistant. What kind of movies are you looking for?"},
-  ]);
+  const [messages, setMessages] = useState(initialMessages);
 
   const containerStyle = useMemo(
     () => ({
@@ -67,6 +75,15 @@ export default function AiChatWidget() {
     alignSelf: role === "user" ? "flex-end" : "flex-start",
   });
 
+  const clearChat = () => {
+    const ok = window.confirm("Clear current chat?");
+    if (!ok) return;
+
+    setLoading(false);
+    setInput("");
+    setMessages(initialMessages);
+  };
+
   const send = async () => {
     const text = input.trim();
     if (!text || loading) return;
@@ -119,19 +136,39 @@ export default function AiChatWidget() {
       <div style={panelStyle}>
         <div style={headerStyle}>
           <div style={{ fontWeight: 600 }}>AI assistant</div>
-          <button
-            onClick={() => setOpen(false)}
-            style={{
-              background: "transparent",
-              color: "#fff",
-              border: "1px solid rgba(255,255,255,0.2)",
-              borderRadius: 8,
-              padding: "4px 8px",
-              cursor: "pointer",
-            }}
-          >
-            Close
-          </button>
+
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <button
+              onClick={clearChat}
+              disabled={loading}
+              style={{
+                background: "transparent",
+                color: "#fff",
+                border: "1px solid rgba(255,255,255,0.2)",
+                borderRadius: 8,
+                padding: "4px 8px",
+                cursor: loading ? "not-allowed" : "pointer",
+                opacity: loading ? 0.6 : 1,
+              }}
+              title="Clear chat"
+            >
+              Clear
+            </button>
+
+            <button
+              onClick={() => setOpen(false)}
+              style={{
+                background: "transparent",
+                color: "#fff",
+                border: "1px solid rgba(255,255,255,0.2)",
+                borderRadius: 8,
+                padding: "4px 8px",
+                cursor: "pointer",
+              }}
+            >
+              Close
+            </button>
+          </div>
         </div>
 
         <div style={bodyStyle}>
@@ -141,9 +178,7 @@ export default function AiChatWidget() {
                 {m.content}
               </div>
             ))}
-            {loading && (
-              <div style={bubble("assistant")}>Thinking...</div>
-            )}
+            {loading && <div style={bubble("assistant")}>Thinking...</div>}
           </div>
         </div>
 
