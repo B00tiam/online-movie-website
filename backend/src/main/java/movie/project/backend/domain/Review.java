@@ -18,20 +18,18 @@ public class Review {
 
     @Id
     private ObjectId id;
-
     private String body;
-
     private String userId;
-
     private String username;
-
     private LocalDateTime createdAt;
+    private Integer rating;
 
-    public Review(String body, String userId, String username) {
+    public Review(String body, String userId, String username, Integer rating) {
         this.body = body;
         this.userId = userId;
         this.username = username;
+        this.rating = rating;
         this.createdAt = LocalDateTime.now();
-
     }
+
 }

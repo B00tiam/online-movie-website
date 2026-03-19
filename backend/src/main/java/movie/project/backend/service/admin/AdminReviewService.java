@@ -6,6 +6,9 @@ import movie.project.backend.domain.dto.admin.AdminReviewView;
 import movie.project.backend.repository.MovieRepository;
 import movie.project.backend.repository.ReviewRepository;
 import org.bson.types.ObjectId;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,11 +21,14 @@ public class AdminReviewService {
 
     private final ReviewRepository reviewRepository;
     private final MovieRepository movieRepository;
+    private final MongoTemplate mongoTemplate;
 
     public AdminReviewService(ReviewRepository reviewRepository,
-                              MovieRepository movieRepository) {
+                              MovieRepository movieRepository,
+                              MongoTemplate mongoTemplate) {
         this.reviewRepository = reviewRepository;
         this.movieRepository = movieRepository;
+        this.mongoTemplate = mongoTemplate;
     }
 
     // - list reviews
@@ -51,8 +57,6 @@ public class AdminReviewService {
             }
         }
 
-        // createdAt is String in AdminReviewView, so sort by the original review createdAt before mapping would be better,
-        // but we already mapped; keep stable by sorting based on createdAt string (ISO-8601 from LocalDateTime#toString).
         out.sort(Comparator.comparing(AdminReviewView::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())).reversed());
         return out;
     }
@@ -67,28 +71,20 @@ public class AdminReviewService {
             throw new IllegalArgumentException("Invalid review id");
         }
 
-        // ensure review exists
-        reviewRepository.findById(oid)
+        Review review = reviewRepository.findById(oid)
                 .orElseThrow(() -> new IllegalArgumentException("Review not found"));
 
-        // remove reference from the movie that contains it
-        List<Movie> movies = movieRepository.findAll();
-        for (Movie m : movies) {
-            if (m.getReviewIds() == null) continue;
+        int rating = review.getRating() == null ? 0 : review.getRating();
 
-            boolean contains = m.getReviewIds().stream()
-                    .anyMatch(r -> r != null && r.getId() != null && r.getId().equals(oid));
-
-            if (contains) {
-                m.setReviewIds(
-                        m.getReviewIds().stream()
-                                .filter(r -> r != null && r.getId() != null && !r.getId().equals(oid))
-                                .toList()
-                );
-                movieRepository.save(m);
-                break;
-            }
-        }
+        // update the movie that contains this reviewId: pull + decrement stats
+        mongoTemplate.update(Movie.class)
+                .matching(Criteria.where("reviewIds").is(oid))
+                .apply(new Update()
+                        .pull("reviewIds", oid)
+                        .inc("ratingCount", -1)
+                        .inc("ratingSum", -rating)
+                )
+                .first();
 
         reviewRepository.deleteById(oid);
     }

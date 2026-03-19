@@ -5,9 +5,9 @@ import {Container, Row, Col, Alert} from "react-bootstrap";
 import ReviewForm from "../reviewForm/ReviewForm";
 import {useAuth} from "../../context/AuthContext";
 
-
 const Reviews = ({getMovieData, movie, reviews, setReviews}) => {
   const revText = useRef();
+  const ratingRef = useRef();
   let params = useParams();
   const movieId = params.movieId;
   const {isAuthenticated, user} = useAuth();
@@ -19,11 +19,19 @@ const Reviews = ({getMovieData, movie, reviews, setReviews}) => {
   const addReview = async (e) => {
     e.preventDefault();
     const rev = revText.current;
+    const rating = Number(ratingRef.current?.value);
+
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      alert("Please select a rating between 1 and 5.");
+      return;
+    }
 
     try {
-      const response = await api.post(`/api/reviews`, {reviewBody: rev.value, imdbId: movieId});
-      const updatedReviews = [...reviews, {body: rev.value, username: user?.username}];
+      await api.post(`/api/reviews`, {reviewBody: rev.value, imdbId: movieId, rating});
+
+      const updatedReviews = [...reviews, {body: rev.value, username: user?.username, rating}];
       rev.value = "";
+      if (ratingRef.current) ratingRef.current.value = "5";
       setReviews(updatedReviews);
     }
     catch (err) {
@@ -46,7 +54,12 @@ const Reviews = ({getMovieData, movie, reviews, setReviews}) => {
             <>
               <Row>
                 <Col>
-                  <ReviewForm handleSubmit={addReview} revText={revText} labelText="Leave a Review?"/>
+                  <ReviewForm
+                    handleSubmit={addReview}
+                    revText={revText}
+                    ratingRef={ratingRef}
+                    labelText="Leave a Review?"
+                  />
                 </Col>
               </Row>
               <Row>
@@ -67,6 +80,7 @@ const Reviews = ({getMovieData, movie, reviews, setReviews}) => {
                   <Row>
                     <Col>
                       {r.username && <strong className="text-info">{r.username}: </strong>}
+                      {typeof r.rating === "number" && <span>({r.rating}/5) </span>}
                       {r.body}
                     </Col>
                   </Row>

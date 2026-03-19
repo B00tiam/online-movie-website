@@ -1,6 +1,5 @@
 package movie.project.backend.service;
 
-
 import movie.project.backend.domain.Movie;
 import movie.project.backend.domain.Review;
 import movie.project.backend.domain.User;
@@ -12,8 +11,6 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-
-
 @Service
 public class ReviewService {
 
@@ -23,19 +20,33 @@ public class ReviewService {
     @Autowired
     private MongoTemplate mongoTemplate;
 
-    public Review createReview(String reviewBody, String imdbId) {
+    public Review createReview(String reviewBody, int rating, String imdbId) {
+        validateRating(rating);
+
         // get current user
         User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         // insert the review (contains user info)
-        Review review = reviewRepository.insert(new Review(reviewBody, currentUser.getId(), currentUser.getUsername()));
+        Review review = reviewRepository.insert(
+                new Review(reviewBody, currentUser.getId(), currentUser.getUsername(), rating)
+        );
 
         // update mongo database
         mongoTemplate.update(Movie.class)
                 .matching(Criteria.where("imdbId").is(imdbId))
-                .apply(new Update().push("reviewIds").value(review.getId()))
+                .apply(new Update()
+                        .push("reviewIds").value(review.getId())
+                        .inc("ratingCount", 1)
+                        .inc("ratingSum", rating)
+                )
                 .first();
 
         return review;
+    }
+
+    private void validateRating(int rating) {
+        if (rating < 1 || rating > 5) {
+            throw new IllegalArgumentException("Rating must be between 1 and 5");
+        }
     }
 }
