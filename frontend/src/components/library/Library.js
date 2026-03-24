@@ -24,6 +24,16 @@ const Library = ({movies}) => {
     await toggleWatchlist(imdbId);
   };
 
+  const getAvgRating = (movie) => {
+    if (typeof movie?.avgRating === "number") return movie.avgRating;
+
+    const sum = Number(movie?.ratingSum ?? 0);
+    const count = Number(movie?.ratingCount ?? 0);
+    if (!Number.isFinite(sum) || !Number.isFinite(count) || count <= 0) return null;
+
+    return sum / count;
+  };
+
   return (
     <div className="all-movies-container">
       <h2>All Movies</h2>
@@ -31,6 +41,7 @@ const Library = ({movies}) => {
       <div className="row g-4">
         {movies?.map((movie) => {
           const inWatchlist = watchlistIds?.includes(movie.imdbId);
+          const avg = getAvgRating(movie);
 
           return (
             <div
@@ -44,6 +55,26 @@ const Library = ({movies}) => {
                     alt={movie.title}
                     className="img-fluid rounded"
                   />
+
+                  {avg !== null && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: "8px",
+                        bottom: "8px",
+                        padding: "4px 8px",
+                        borderRadius: "10px",
+                        background: "rgba(0,0,0,0.65)",
+                        color: "#fff",
+                        fontSize: "22px",
+                        fontWeight: 600,
+                        lineHeight: 1
+                      }}
+                      title={`Average rating: ${avg.toFixed(1)} / 5 (${movie?.ratingCount ?? 0})`}
+                    >
+                      {avg.toFixed(1)} / 5
+                    </div>
+                  )}
 
                   <button
                     type="button"

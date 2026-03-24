@@ -54,6 +54,16 @@ const GenreMovies = () => {
     await toggleWatchlist(imdbId);
   };
 
+  const getAvgRating = (movie) => {
+    if (typeof movie?.avgRating === "number") return movie.avgRating;
+
+    const sum = Number(movie?.ratingSum ?? 0);
+    const count = Number(movie?.ratingCount ?? 0);
+    if (!Number.isFinite(sum) || !Number.isFinite(count) || count <= 0) return null;
+
+    return sum / count;
+  };
+
   return (
     <Container className="mt-4">
       <Row className="align-items-center mb-3">
@@ -96,12 +106,33 @@ const GenreMovies = () => {
       <Row xs={2} md={4} lg={5} className="g-3">
         {sortedMovies.map((m) => {
           const inWatchlist = watchlistIds?.includes(m.imdbId);
+          const avg = getAvgRating(m);
 
           return (
             <Col key={m.imdbId}>
               <Card className="h-100">
                 <div style={{ position: "relative" }}>
                   {m.poster && <Card.Img variant="top" src={m.poster} alt={m.title} />}
+
+                  {avg !== null && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: "8px",
+                        bottom: "8px",
+                        padding: "4px 8px",
+                        borderRadius: "10px",
+                        background: "rgba(0,0,0,0.65)",
+                        color: "#fff",
+                        fontSize: "22px",
+                        fontWeight: 600,
+                        lineHeight: 1
+                      }}
+                      title={`Average rating: ${avg.toFixed(1)} / 5 (${m?.ratingCount ?? 0})`}
+                    >
+                      {avg.toFixed(1)} / 5
+                    </div>
+                  )}
 
                   <button
                     type="button"
