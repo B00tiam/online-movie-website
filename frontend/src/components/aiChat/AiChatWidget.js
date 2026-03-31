@@ -88,12 +88,18 @@ export default function AiChatWidget() {
     const text = input.trim();
     if (!text || loading) return;
 
-    setMessages((prev) => [...prev, { role: "user", content: text }]);
+    const nextMessages = [...messages, { role: "user", content: text }];
+
+    setMessages(nextMessages);
     setInput("");
     setLoading(true);
 
     try {
-      const res = await api.post("/api/ai/chat", { message: text });
+      const MAX_MESSAGES = 20; // keep last N messages to limit payload size
+      const payloadMessages = nextMessages.slice(-MAX_MESSAGES);
+
+      const res = await api.post("/api/ai/chat", { messages: payloadMessages });
+
       const reply = res.data?.reply ?? "(empty reply)";
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
     } catch (e) {

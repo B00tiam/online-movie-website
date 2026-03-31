@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import movie.project.backend.domain.Movie;
+import movie.project.backend.domain.dto.ai.AiChatRequest;
 import movie.project.backend.domain.dto.ai.LocalMovieSnippet;
 import movie.project.backend.service.MovieService;
 import org.springframework.beans.factory.annotation.Value;
@@ -87,6 +88,53 @@ public class AiChatService {
         return safeTextReply(step2Raw);
     }
 
+    public String chat(List<AiChatRequest.ChatMessage> messages) {
+        String url = buildGeminiUrl();
+
+        List<Map<String, Object>> step1Contents = concatContents(
+                List.of(asGeminiContent("user", buildStep1Instruction())),
+                toGeminiContents(messages)
+        );
+
+        String step1Raw = callModel(url, step1Contents);
+        AgentModelOutput out = parseAgentOutput(step1Raw);
+        if (out == null) {
+            return safeTextReply(step1Raw);
+        }
+
+        if ("final".equalsIgnoreCase(out.type)) {
+            return out.reply == null || out.reply.isBlank() ? safeTextReply(step1Raw) : out.reply;
+        }
+
+        if (!"tool_call".equalsIgnoreCase(out.type) || out.tool == null) {
+            return safeTextReply(step1Raw);
+        }
+
+        if (!"search_movies".equalsIgnoreCase(out.tool)) {
+            return safeTextReply(step1Raw);
+        }
+
+        ToolCallArgs args = out.args == null ? new ToolCallArgs(null, null, null) : out.args;
+        ToolResult toolResult = runSearchTool(args);
+
+        String toolBundle = "Tool call:\n" + toJsonSafe(out) + "\n\nTOOL_RESULT:\n" + toJsonSafe(toolResult);
+
+        List<Map<String, Object>> step2Contents = concatContents(
+                concatContents(
+                        List.of(asGeminiContent("user", buildStep2Instruction())),
+                        toGeminiContents(messages)
+                ),
+                List.of(asGeminiContent("user", toolBundle))
+        );
+
+        String step2Raw = callModel(url, step2Contents);
+        AgentModelOutput out2 = parseAgentOutput(step2Raw);
+        if (out2 != null && "final".equalsIgnoreCase(out2.type) && out2.reply != null && !out2.reply.isBlank()) {
+            return out2.reply;
+        }
+        return safeTextReply(step2Raw);
+    }
+
     private String buildGeminiUrl() {
         String normalizedBase = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
         return normalizedBase
@@ -102,6 +150,23 @@ public class AiChatService {
                                 "parts", List.of(Map.of("text", prompt))
                         )
                 ),
+                "generationConfig", Map.of(
+                        "temperature", 0.3
+                )
+        );
+
+        return restClient.post()
+                .uri(url)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .body(payload)
+                .retrieve()
+                .body(String.class);
+    }
+
+    private String callModel(String url, List<Map<String, Object>> contents) {
+        Map<String, Object> payload = Map.of(
+                "contents", contents,
                 "generationConfig", Map.of(
                         "temperature", 0.3
                 )
@@ -157,6 +222,69 @@ public class AiChatService {
                 """.strip() + "\n" + (userMessage == null ? "" : userMessage.trim())
                 + "\n\nTool call:\n" + toJsonSafe(step1)
                 + "\n\nTOOL_RESULT:\n" + toolJson;
+    }
+
+    private String buildStep1Instruction() {
+        return """
+                You are an AI agent for a movie website. Your job is to decide whether to call a tool to search the local movie database.
+
+                Output MUST be a single JSON object only (no markdown, no extra text).
+
+                Allowed tools:
+                1) search_movies(args):
+                   - mode: "title" or "genre"
+                   - query: string (required)
+                   - limit: integer (optional, max 20)
+
+                If the user asks to recommend or find movies by a genre (e.g. science fiction, action, comedy), call search_movies with mode="genre".
+                Otherwise, if the user asks for a specific movie name, call search_movies with mode="title".
+
+                JSON schemas:
+                - Tool call:
+                  {"type":"tool_call","tool":"search_movies","args":{"mode":"title|genre","query":"...","limit":10}}
+                - Final answer:
+                  {"type":"final","reply":"..."}
+                """.strip();
+    }
+
+    private String buildStep2Instruction() {
+        return """
+                You are an AI agent for a movie website.
+
+                You previously decided to call a tool. Now you must produce the final answer.
+                Output MUST be a single JSON object only (no markdown, no extra text).
+
+                JSON schema:
+                {"type":"final","reply":"..."}
+                """.strip();
+    }
+
+    private Map<String, Object> asGeminiContent(String role, String text) {
+        return Map.of(
+                "role", role,
+                "parts", List.of(Map.of("text", text == null ? "" : text))
+        );
+    }
+
+    private List<Map<String, Object>> toGeminiContents(List<AiChatRequest.ChatMessage> messages) {
+        if (messages == null || messages.isEmpty()) return List.of();
+        return messages.stream()
+                .filter(m -> m != null && m.content() != null && !m.content().isBlank())
+                .map(m -> asGeminiContent(normalizeGeminiRole(m.role()), m.content().trim()))
+                .toList();
+    }
+
+    private String normalizeGeminiRole(String role) {
+        if (role == null) return "user";
+        String r = role.trim().toLowerCase(Locale.ROOT);
+        if ("assistant".equals(r) || "model".equals(r)) return "model";
+        return "user";
+    }
+
+    private List<Map<String, Object>> concatContents(List<Map<String, Object>> a, List<Map<String, Object>> b) {
+        if (a == null || a.isEmpty()) return b == null ? List.of() : b;
+        if (b == null || b.isEmpty()) return a;
+        return java.util.stream.Stream.concat(a.stream(), b.stream()).toList();
     }
 
     private ToolResult runSearchTool(ToolCallArgs args) {
