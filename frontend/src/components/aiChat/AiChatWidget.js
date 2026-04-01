@@ -1,4 +1,5 @@
 import React, {useMemo, useState} from "react";
+import { Link } from "react-router-dom";
 import api from "../../api/AxiosConfig";
 
 export default function AiChatWidget() {
@@ -7,6 +8,7 @@ export default function AiChatWidget() {
       {
         role: "assistant",
         content: "Hello, I'm the movie site AI assistant. What kind of movies are you looking for?",
+        movies: [],
       },
     ],
     []
@@ -84,6 +86,71 @@ export default function AiChatWidget() {
     setMessages(initialMessages);
   };
 
+  const trailerTo = (ytTrailerId) => `/Trailer/${ytTrailerId}`;
+
+  const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  const renderAssistantContent = (text, movies) => {
+    const raw = text ?? "";
+    const list = Array.isArray(movies) ? movies : [];
+    const usable = list
+      .filter((m) => m && typeof m.title === "string" && m.title.trim() && m.ytTrailerId)
+      .map((m) => ({ title: m.title.trim(), ytTrailerId: m.ytTrailerId }))
+      .sort((a, b) => b.title.length - a.title.length); // longer first to avoid partial matches
+
+    if (!raw || usable.length === 0) return raw;
+
+    const titleToMovie = new Map(usable.map((m) => [m.title.toLowerCase(), m]));
+
+    // Match titles with optional **bold** markers: **Title** or Title
+    const titleAlternation = usable.map((m) => escapeRegExp(m.title)).join("|");
+    const re = new RegExp(`(\\*\\*)?(${titleAlternation})(\\*\\*)?`, "g");
+
+    // Reduce false positives: only replace if around-match boundary looks safe
+    const isBoundary = (ch) => {
+      if (ch === undefined) return true;
+      return /[\s.,!?:;()"'\[\]{}<>\/\\\n\r\t-]/.test(ch);
+    };
+
+    const parts = [];
+    let last = 0;
+    let match;
+    while ((match = re.exec(raw)) !== null) {
+      const full = match[0];
+      const title = match[2]; // group 2 = the actual title
+      const start = match.index;
+      const end = start + full.length;
+
+      const prevChar = raw[start - 1];
+      const nextChar = raw[end];
+
+      // Skip replacement when embedded in a word/identifier
+      if (!isBoundary(prevChar) || !isBoundary(nextChar)) {
+        continue;
+      }
+
+      const movie = titleToMovie.get(title.toLowerCase());
+      if (!movie) continue;
+
+      if (start > last) parts.push(raw.slice(last, start));
+
+      parts.push(
+        <Link
+          key={`${movie.ytTrailerId}-${start}`}
+          to={trailerTo(movie.ytTrailerId)}
+          style={{ color: "#93c5fd", textDecoration: "underline" }}
+        >
+          {title}
+        </Link>
+      );
+
+      last = end;
+    }
+
+    if (last < raw.length) parts.push(raw.slice(last));
+    return parts.length === 0 ? raw : parts;
+  };
+
   const send = async () => {
     const text = input.trim();
     if (!text || loading) return;
@@ -96,12 +163,17 @@ export default function AiChatWidget() {
 
     try {
       const MAX_MESSAGES = 20; // keep last N messages to limit payload size
-      const payloadMessages = nextMessages.slice(-MAX_MESSAGES);
+      const payloadMessages = nextMessages.slice(-MAX_MESSAGES).map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
 
       const res = await api.post("/api/ai/chat", { messages: payloadMessages });
 
       const reply = res.data?.reply ?? "(empty reply)";
-      setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+      const movies = Array.isArray(res.data?.movies) ? res.data.movies : [];
+
+      setMessages((prev) => [...prev, { role: "assistant", content: reply, movies }]);
     } catch (e) {
       const msg =
         e?.response?.data?.message ||
@@ -110,7 +182,7 @@ export default function AiChatWidget() {
         "Request failed";
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: `ERROR: ${msg}` },
+        { role: "assistant", content: `ERROR: ${msg}`, movies: [] },
       ]);
     } finally {
       setLoading(false);
@@ -181,7 +253,9 @@ export default function AiChatWidget() {
           <div style={{ display: "flex", flexDirection: "column" }}>
             {messages.map((m, idx) => (
               <div key={idx} style={bubble(m.role)}>
-                {m.content}
+                {m.role === "assistant"
+                  ? renderAssistantContent(m.content, m.movies)
+                  : m.content}
               </div>
             ))}
             {loading && <div style={bubble("assistant")}>Thinking...</div>}

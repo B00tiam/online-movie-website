@@ -135,6 +135,63 @@ public class AiChatService {
         return safeTextReply(step2Raw);
     }
 
+    public record AiResult(String reply, List<LocalMovieSnippet> movies) {
+    }
+
+    public AiResult chatWithMovies(List<AiChatRequest.ChatMessage> messages) {
+        String url = buildGeminiUrl();
+
+        List<Map<String, Object>> step1Contents = concatContents(
+                List.of(asGeminiContent("user", buildStep1Instruction())),
+                toGeminiContents(messages)
+        );
+
+        String step1Raw = callModel(url, step1Contents);
+        AgentModelOutput out = parseAgentOutput(step1Raw);
+        if (out == null) {
+            return new AiResult(safeTextReply(step1Raw), List.of());
+        }
+
+        if ("final".equalsIgnoreCase(out.type)) {
+            String reply = (out.reply == null || out.reply.isBlank()) ? safeTextReply(step1Raw) : out.reply;
+            return new AiResult(reply, List.of());
+        }
+
+        if (!"tool_call".equalsIgnoreCase(out.type) || out.tool == null) {
+            return new AiResult(safeTextReply(step1Raw), List.of());
+        }
+
+        if (!"search_movies".equalsIgnoreCase(out.tool)) {
+            return new AiResult(safeTextReply(step1Raw), List.of());
+        }
+
+        ToolCallArgs args = out.args == null ? new ToolCallArgs(null, null, null) : out.args;
+        ToolResult toolResult = runSearchTool(args);
+
+        String toolBundle = "Tool call:\n" + toJsonSafe(out) + "\n\nTOOL_RESULT:\n" + toJsonSafe(toolResult);
+
+        List<Map<String, Object>> step2Contents = concatContents(
+                concatContents(
+                        List.of(asGeminiContent("user", buildStep2Instruction())),
+                        toGeminiContents(messages)
+                ),
+                List.of(asGeminiContent("user", toolBundle))
+        );
+
+        String step2Raw = callModel(url, step2Contents);
+        AgentModelOutput out2 = parseAgentOutput(step2Raw);
+
+        String reply;
+        if (out2 != null && "final".equalsIgnoreCase(out2.type) && out2.reply != null && !out2.reply.isBlank()) {
+            reply = out2.reply;
+        } else {
+            reply = safeTextReply(step2Raw);
+        }
+
+        List<LocalMovieSnippet> movies = (toolResult == null || toolResult.items == null) ? List.of() : toolResult.items;
+        return new AiResult(reply, movies);
+    }
+
     private String buildGeminiUrl() {
         String normalizedBase = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
         return normalizedBase
@@ -311,11 +368,37 @@ public class AiChatService {
                         m.getTitle(),
                         m.getReleaseDate(),
                         m.getGenres(),
-                        m.getPoster()
+                        m.getPoster(),
+                        extractYouTubeTrailerId(m.getTrailerLink())
                 ))
                 .toList();
 
         return new ToolResult("search_movies", mode, q, limit, items, null);
+    }
+
+    private String extractYouTubeTrailerId(String trailerLink) {
+        if (trailerLink == null) return null;
+        String s = trailerLink.trim();
+        if (s.isEmpty()) return null;
+
+        // Already a key?
+        if (!s.contains("/") && !s.contains("?") && !s.contains("=")) {
+            return s;
+        }
+
+        // https://www.youtube.com/watch?v=3RDaPV_rJ1Y
+        Matcher mWatch = Pattern.compile("[?&]v=([A-Za-z0-9_-]{6,})").matcher(s);
+        if (mWatch.find()) return mWatch.group(1);
+
+        // https://youtu.be/3RDaPV_rJ1Y
+        Matcher mShort = Pattern.compile("youtu\\.be/([A-Za-z0-9_-]{6,})").matcher(s);
+        if (mShort.find()) return mShort.group(1);
+
+        // https://www.youtube.com/embed/3RDaPV_rJ1Y
+        Matcher mEmbed = Pattern.compile("youtube\\.com/embed/([A-Za-z0-9_-]{6,})").matcher(s);
+        if (mEmbed.find()) return mEmbed.group(1);
+
+        return null;
     }
 
     private String normalizeGenreQuery(String q) {

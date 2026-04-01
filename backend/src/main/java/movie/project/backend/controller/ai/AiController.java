@@ -34,8 +34,9 @@ public class AiController {
             if (!hasAnyNonBlank) {
                 return ResponseEntity.badRequest().body(new ErrorResponse("messages cannot be empty or blank!"));
             }
-            String reply = aiChatService.chat(messages);
-            return ResponseEntity.ok(new AiChatResponse(reply));
+
+            AiChatService.AiResult result = aiChatService.chatWithMovies(messages);
+            return ResponseEntity.ok(new AiChatResponse(result.reply(), result.movies()));
         }
 
         String msg = request.message();
@@ -44,7 +45,7 @@ public class AiController {
         }
 
         String reply = aiChatService.chat(msg);
-        return ResponseEntity.ok(new AiChatResponse(reply));
+        return ResponseEntity.ok(new AiChatResponse(reply, List.of()));
     }
 
     public static class ErrorResponse {

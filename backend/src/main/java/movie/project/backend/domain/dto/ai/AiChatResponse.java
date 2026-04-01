@@ -1,4 +1,7 @@
 package movie.project.backend.domain.dto.ai;
 
-public record AiChatResponse(String reply) {
+import java.util.List;
+
+
+public record AiChatResponse(String reply, List<LocalMovieSnippet> movies) {
 }

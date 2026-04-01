@@ -7,6 +7,7 @@ public record LocalMovieSnippet(
         String title,
         String releaseDate,
         List<String> genres,
-        String poster
+        String poster,
+        String ytTrailerId
 ) {
 }
