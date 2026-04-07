@@ -112,7 +112,7 @@ Running this will build the backend and frontend images, and run them in Docker 
 #### Running:
 
 Using the command `docker-compose up --build` in terminal, the backend and frontend containers will be initialized & started.
-For the available version, pls switch to the branch '[docker](https://github.com/B00tiam/online-movie-website/tree/docker)'.
+For the available version, pls switch to t45he branch '[docker](https://github.com/B00tiam/online-movie-website/tree/docker)'.
 
 ### Code structure:
 
