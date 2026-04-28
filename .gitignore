@@ -53,6 +53,9 @@ backend/.mvn/wrapper/maven-wrapper.jar
 # .env
 **/.env
 
+# db data json files
+backend/_db_data/
+
 # ---------- Frontend (CRA) ----------
 
 # dependencies

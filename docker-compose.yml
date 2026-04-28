@@ -3,11 +3,24 @@ services:
     build:
       context: ./backend
     container_name: movie-backend
+    env_file:
+      - .env
     environment:
       MONGO_DATABASE: ${MONGO_DATABASE}
       MONGO_USER: ${MONGO_USER}
       MONGO_PASSWORD: ${MONGO_PASSWORD}
       MONGO_CLUSTER: ${MONGO_CLUSTER}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRE: ${JWT_EXPIRE}
+      INIT_ADMIN_USERNAME: ${INIT_ADMIN_USERNAME}
+      INIT_ADMIN_EMAIL: ${INIT_ADMIN_EMAIL}
+      INIT_ADMIN_PASSWORD: ${INIT_ADMIN_PASSWORD}
+      AI_BASE_URL: ${AI_BASE_URL}
+      AI_API_KEY: ${AI_API_KEY}
+      AI_MODEL: ${AI_MODEL}
+      TMDB_API_KEY: ${TMDB_API_KEY}
+      JAVA_OPTS: "-Xmx512m -Xss256k"
+    restart: unless-stopped
     ports:
       - "8080:8080"
 
@@ -17,5 +30,6 @@ services:
     container_name: movie-frontend
     depends_on:
       - backend
+    restart: unless-stopped
     ports:
-      - "3000:80"
+      - "80:80"
