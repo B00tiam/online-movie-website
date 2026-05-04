@@ -114,6 +114,66 @@ Running this will build the backend and frontend images, and run them in Docker 
 Using the command `docker-compose up --build` in terminal, the backend and frontend containers will be initialized & started.
 For the available version, pls switch to t45he branch '[docker](https://github.com/B00tiam/online-movie-website/tree/docker)'.
 
+
+### For AWS deployment:
+
+#### Steps for starting the AWS service:
+
+1. Create a new personal AWS account. (if you don't have one)
+2. Set up an EC2 instance:
+    - Select a server region (e.g., us-east-1).
+    - Create a new key pair for SSH access. (type: RSA; format: PEM for Mac/Linux, PPK for Windows)
+    - Launch an EC2 instance:
+      - Choose an Amazon Machine Image (AMI) (e.g., Amazon Linux 2).
+      - Choose the system architecture (e.g., 64-bit).
+      - Select an instance type (e.g., t2.micro/t3.micro for free tier, or t4g.micro).
+      - Define storage size (e.g., 20 GiB + gp3).
+      - Set SSH rules:
+      ```
+      Security group rule 1 (TCP, 22,  <your IP>/32)     ← SSH
+      Security group rule 2 (TCP, 80,  0.0.0.0/0)       ← HTTP
+      Security group rule 3 (TCP, 443, 0.0.0.0/0)      ← HTTPS
+      ```
+    - Allocate an Elastic IP address for the new instance.
+    - Connect to the instance using SSH command:
+    ```
+    ssh -i <path to your key> ec2-user@<your elastic IP>
+    ```
+3. Install Docker and Compose after login:
+    - Update the system:
+    ```
+    sudo dnf update -y
+    ```
+    - Install Docker & Git:
+    ```
+    sudo dnf install -y docker git
+    ```
+    - Set auto start for Docker:
+    ```
+    sudo systemctl enable --now docker
+    ```
+    - Add your account into Docker group: (avoid sudo every time)
+    ```
+    sudo usermod -aG docker ec2-user
+    ```
+    - Install Docker Compose (for ARM, t4g instance)
+    ```
+    sudo mkdir -p /usr/local/lib/docker/cli-plugins
+    sudo curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-aarch64 \
+    -o /usr/local/lib/docker/cli-plugins/docker-compose
+    sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+    ```
+    - Verify the installation:
+    ```
+    docker --version
+    ```
+4. Clone the code from branch '[docker](https://github.com/B00tiam/online-movie-website/tree/docker)', 
+using the command `git clone -b docker https://github.com/B00tiam/online-movie-website.git`, 
+then create the .env file in the root directory using command `nano .env`
+5. Login to the [MongoDB Atlas dashboard](https://cloud.mongodb.com/), add your elastic IP address to the whitelist.
+6. Switch to the code folder, run command `docker-compose up --build` to start the backend and frontend containers.
+
+
 ### Code structure:
 
 ```
@@ -129,6 +189,7 @@ For the available version, pls switch to t45he branch '[docker](https://github.c
 ├─ README.md                # Project description md
 └─ .gitignore               # Git ignorance
 ```
+
 
 ### Tech stack:
 
