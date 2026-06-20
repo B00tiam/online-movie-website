@@ -222,4 +222,9 @@ then create the .env file in the root directory using command `nano .env`
 - jest-dom
 
 
+### TODO list:
+
+- [ ] Self profile page & update functions for users.
+- [ ] Access to review when watching the movie trailers.
+- [ ]
 
