@@ -15,7 +15,7 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
 
-    @Value("${app.jwt.secret:mySecretKey}")
+    @Value("${app.jwt.secret:mySecretKeyForJWTSigningMustBeLongerThanThisToBeSecure}")
     private String jwtSecret;
 
     @Value("${app.jwt.expiration:86400}")
@@ -61,10 +61,42 @@ public class JwtUtil {
                 .getBody();
     }
 
-    private Boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
+    // This func is only used for extracting claims from expired tokens (to return 401 Unauthorized)
+    private Claims extractAllClaimsIgnoreExpiration(String token) {
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (ExpiredJwtException e) {
+            // Token is expired, but signature is valid, return the claims
+            return e.getClaims();
+        }
     }
 
+    // This func is used for checking if token is expired (dont throw exception)
+    public boolean isTokenExpired(String token) {
+        try {
+            return extractAllClaimsIgnoreExpiration(token)
+                    .getExpiration()
+                    .before(new Date());
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
+    // This func is used for checking if signature of token is valid (dont throw exception & varify expired time)
+    public boolean isTokenSignatureValid(String token) {
+        try {
+            extractAllClaimsIgnoreExpiration(token);
+            return true;
+        } catch (JwtException e) {
+            return false;
+        }
+    }
+
+    // This func is used for checking if token is valid (dont throw exception)
     public Boolean validateToken(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
