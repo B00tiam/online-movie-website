@@ -224,7 +224,7 @@ then create the .env file in the root directory using command `nano .env`
 
 ### TODO list:
 
-- [ ] Self profile page & update functions for users.
+- [x] Self profile page & update functions for users.
 - [ ] Access to review when watching the movie trailers.
-- [ ]
+- [ ] Enable users to check all of their own reviews.
 
