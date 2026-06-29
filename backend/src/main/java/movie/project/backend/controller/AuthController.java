@@ -3,12 +3,16 @@ package movie.project.backend.controller;
 import movie.project.backend.domain.dto.AuthResponse;
 import movie.project.backend.domain.dto.LoginRequest;
 import movie.project.backend.domain.dto.RegisterRequest;
+import movie.project.backend.domain.dto.ProfileResponse;
+import movie.project.backend.domain.dto.UpdateProfileRequest;
 import movie.project.backend.service.AuthService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+
 
 @RestController
 @RequestMapping("/api/auth")
@@ -51,6 +55,30 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                     .body(new ErrorResponse("Delete account failed: " + e.getMessage()));
+        }
+    }
+
+    // - get current user profile
+    @GetMapping("/profile")
+    public ResponseEntity<?> getProfile() {
+        try {
+            ProfileResponse profile = authService.getProfile();
+            return ResponseEntity.ok(profile);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new ErrorResponse("Get profile failed: " + e.getMessage()));
+        }
+    }
+
+    // - update current user profile
+    @PatchMapping("/profile")
+    public ResponseEntity<?> updateProfile(@RequestBody UpdateProfileRequest req) {
+        try {
+            ProfileResponse profile = authService.updateProfile(req);
+            return ResponseEntity.ok(profile);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new ErrorResponse("Update profile failed: " + e.getMessage()));
         }
     }
 

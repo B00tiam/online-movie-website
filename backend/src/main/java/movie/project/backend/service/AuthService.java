@@ -5,7 +5,10 @@ import movie.project.backend.domain.User;
 import movie.project.backend.domain.dto.AuthResponse;
 import movie.project.backend.domain.dto.LoginRequest;
 import movie.project.backend.domain.dto.RegisterRequest;
+import movie.project.backend.domain.dto.ProfileResponse;
+import movie.project.backend.domain.dto.UpdateProfileRequest;
 import movie.project.backend.repository.UserRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -15,7 +18,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+
 
 @Service
 public class AuthService {
@@ -32,6 +37,7 @@ public class AuthService {
     @Autowired
     private AuthenticationManager authenticationManager;
 
+    // login a user
     public AuthResponse login(LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -47,6 +53,7 @@ public class AuthService {
         return new AuthResponse(token, user.getUsername(), user.getEmail(), user.getRole());
     }
 
+    // register a new user
     public AuthResponse register(RegisterRequest registerRequest) {
         // check if username already exists
         if (userRepository.existsByUsername(registerRequest.getUsername())) {
@@ -94,4 +101,55 @@ public class AuthService {
 
         userRepository.delete(user);
     }
+
+    // get current user profile
+    public ProfileResponse getProfile() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
+
+        return new ProfileResponse(
+                user.getUsername(),
+                user.getEmail(),
+                user.getRole(),
+                user.getBirthday() != null ? user.getBirthday().toString() : null,
+                user.getGender()
+        );
+    }
+
+    // update birthday and gender
+    public ProfileResponse updateProfile(UpdateProfileRequest req) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
+
+        if (req.getBirthday() != null && !req.getBirthday().isBlank()) {
+            user.setBirthday(LocalDate.parse(req.getBirthday()));
+        } else {
+            user.setBirthday(null);
+        }
+
+        if (req.getGender() != null && !req.getGender().isBlank()) {
+            user.setGender(req.getGender().trim());
+        } else {
+            user.setGender(null);
+        }
+
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        return new ProfileResponse(
+                user.getUsername(),
+                user.getEmail(),
+                user.getRole(),
+                user.getBirthday() != null ? user.getBirthday().toString() : null,
+                user.getGender()
+        );
+    }
+
+
 }

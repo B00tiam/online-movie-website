@@ -13,6 +13,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -44,7 +46,11 @@ public class User implements UserDetails {
     private String role = "USER";
     
     private boolean enabled = true;
-    
+
+    private LocalDate birthday; // "yyyy-MM-dd"
+
+    private String gender;      // male / female / other
+
     private LocalDateTime createdAt = LocalDateTime.now();
     
     private LocalDateTime updatedAt = LocalDateTime.now();

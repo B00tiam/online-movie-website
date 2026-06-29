@@ -41,6 +41,7 @@ export const AuthProvider = ({ children }) => {
     loadWatchlist();
   }, [isAuthenticated]);
 
+  // refresh the watchlist
   const refreshWatchlist = async () => {
     if (!isAuthenticated) return [];
     const res = await api.get('/api/watchlist');
@@ -49,6 +50,7 @@ export const AuthProvider = ({ children }) => {
     return ids;
   };
 
+  // toggle watchlist (saved - unsaved)
   const toggleWatchlist = async (imdbId) => {
     if (!isAuthenticated) {
       return { success: false, requiresLogin: true };
@@ -144,6 +146,26 @@ export const AuthProvider = ({ children }) => {
     setWatchlistIds([]);
   };
 
+  // update birthday and gender
+  const updateProfile = async ({ birthday, gender }) => {
+    try {
+      const res = await api.patch('/api/auth/profile', { birthday, gender });
+      const { birthday: newBirthday, gender: newGender } = res.data;
+
+      const updatedUser = { ...user, birthday: newBirthday, gender: newGender };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      setUser(updatedUser);
+
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Update profile failed!'
+      };
+    }
+  };
+
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -155,7 +177,8 @@ export const AuthProvider = ({ children }) => {
       logout,
       watchlistIds,
       refreshWatchlist,
-      toggleWatchlist
+      toggleWatchlist,
+      updateProfile
     }}>
       {children}
     </AuthContext.Provider>
