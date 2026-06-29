@@ -101,6 +101,10 @@ const Header = () => {
             >
               {isAuthenticated ? (
                 <>
+                  <NavDropdown.Item as={Link} to="/profile">
+                    Profile
+                  </NavDropdown.Item>
+                  <NavDropdown.Divider />
                   <NavDropdown.Item onClick={handleLogout}>
                     Logout
                   </NavDropdown.Item>

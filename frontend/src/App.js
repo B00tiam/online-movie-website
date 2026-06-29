@@ -12,6 +12,7 @@ import Reviews from "./components/reviews/Reviews";
 import NotFound from "./components/notFound/NotFound";
 import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
+import UserProfile from "./components/profile/UserProfile";
 import AiChatWidget from "./components/aiChat/AiChatWidget";
 import GenreMovies from "./components/sort/GenreMovies";
 import Watchlist from "./components/watchlist/Watchlist";
@@ -74,6 +75,7 @@ function App() {
             <Route path="/watchList" element={<Watchlist/>}></Route>
             <Route path="/login" element={<Login/>}></Route>
             <Route path="/register" element={<Register/>}></Route>
+            <Route path="/profile" element={<UserProfile/>}></Route>
             
             <Route element={<RequireAdmin />}>
               <Route path="/admin/users" element={<AdminUsers />} />
